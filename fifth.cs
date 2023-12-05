@@ -144,8 +144,8 @@ class CategoryMapper
                 {
                     long left = long.Max(mapper.Left, otherMapper.Left - mapper.MapBy);
                     long right = long.Min(mapper.Right, otherMapper.Right - mapper.MapBy);
-                    Range r = new Range { Left = left, Right = right };
-                    remaining = remaining.SelectMany(r => r.without(r));
+                    Range remove = new Range { Left = left, Right = right };
+                    remaining = remaining.SelectMany(r => r.without(remove));
 
                     Mapper partialMapper = new Mapper
                     {
