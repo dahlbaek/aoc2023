@@ -96,6 +96,21 @@ public class Mapper
     }
 }
 
+class Range
+{
+    public required long Left { get; set; }
+    public required long Right { get; set; }
+
+    public IEnumerable<Range> without(Range other)
+    {
+        long left_intersect = long.Max(Left, other.Left);
+        long right_intersect = long.Max(Right, other.Right);
+        Range first = new Range { Left = Left, Right = left_intersect };
+        Range second = new Range { Left = right_intersect, Right = Right };
+        Range[] array = [first, second];
+        return array.Where(r => r.Left < r.Right);
+    }
+}
 
 class CategoryMapper
 {
@@ -121,12 +136,7 @@ class CategoryMapper
         foreach (var mapper in Mappers)
         {
 
-            HashSet<long> remaining = [];
-
-            for (long c = mapper.Left; c < mapper.Right; c++)
-            {
-                remaining.Add(c);
-            }
+            IEnumerable<Range> remaining = [new Range { Left = mapper.Left, Right = mapper.Right }];
 
             foreach (var otherMapper in categoryMapper.Mappers)
             {
@@ -134,10 +144,8 @@ class CategoryMapper
                 {
                     long left = long.Max(mapper.Left, otherMapper.Left - mapper.MapBy);
                     long right = long.Min(mapper.Right, otherMapper.Right - mapper.MapBy);
-                    for (long c = left; c < right; c++)
-                    {
-                        remaining.Remove(c);
-                    }
+                    Range r = new Range { Left = left, Right = right };
+                    remaining = remaining.SelectMany(r => r.without(r));
 
                     Mapper partialMapper = new Mapper
                     {
@@ -150,35 +158,11 @@ class CategoryMapper
                     Console.WriteLine(mappers.Count());
                 }
             }
-            if (remaining.Count > 0)
+
+            Console.WriteLine("Remaining: " + remaining.Count());
+            foreach (var r in remaining)
             {
-                Console.WriteLine("Remaining: " + remaining.Count);
-                IEnumerable<long> remaining_ordered = remaining.ToArray().Order();
-                Mapper extra_mapper = new Mapper
-                {
-                    Left = remaining_ordered.First(),
-                    Right = remaining_ordered.First() + 1,
-                    MapBy = mapper.MapBy,
-                };
-                foreach (var right in remaining_ordered.Skip(1))
-                {
-                    if (extra_mapper.Right == right)
-                    {
-                        extra_mapper.Right += 1;
-                    }
-                    else
-                    {
-                        mappers = mappers.Append(extra_mapper);
-                        Console.WriteLine("push mapper");
-                        extra_mapper = new Mapper
-                        {
-                            Left = right,
-                            Right = right + 1,
-                            MapBy = mapper.MapBy,
-                        };
-                    }
-                }
-                mappers = mappers.Append(extra_mapper);
+                mappers = mappers.Append(new Mapper { Left = r.Left, Right = r.Right, MapBy = mapper.MapBy });
                 Console.WriteLine("push mapper");
             }
         }
@@ -191,4 +175,3 @@ class CategoryMapper
         };
     }
 }
-
