@@ -72,7 +72,7 @@ class Tuple {
         return tmpTrans.stream().map(x -> new Tuple(x.toString(), groups)).filter(x -> x.valid());
     }
 
-    public Long possibilities2(int beginIndex, int groupIndex) {
+    public Long possibilities2() {
         Stepper stepper = new Stepper(this);
         return stepper.step(new STuple(0, 1L))
                 .flatMap(stepper::step)
@@ -158,7 +158,7 @@ class Solution {
         long part1 = parse(true).flatMap(t -> t.possibilities()).count();
         System.out.println("Part 1: " + part1);
 
-        long part2 = parse(false).map(t -> t.possibilities2(0, 0)).reduce(0L, Long::sum);
+        long part2 = parse(false).map(t -> t.possibilities2()).reduce(0L, Long::sum);
         System.out.println("Part 2: " + part2);
     }
 }
