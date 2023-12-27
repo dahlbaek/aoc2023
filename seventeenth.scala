@@ -53,7 +53,9 @@ def readFile: (Int, String) =
         .filter((d, _) => (d.id - direction.id).abs % 4 != 2)
         .filter { case (_, (x, _)) => 0 <= x && x < rowLength }
         .filter { case (_, (_, y)) => 0 <= y && y < rowLength }
-        .filter((d, _) => filterBy(d, direction, consecutive))
+        .filter((nextDirection, _) =>
+          filterBy(nextDirection, direction, consecutive)
+        )
         .map((d, pos) =>
           val nextHeatLoss = currentHeatLoss + heatLossOf(pos)
           val nextConsecutive = if (d == direction) consecutive + 1 else 1
@@ -67,8 +69,9 @@ def readFile: (Int, String) =
   val ord = Ordering[(Int, Int, Direction, Coordinate)].reverse
 
   val pQueue1 = PriorityQueue((0, 0, Direction.Right, (0, 0)))(ord)
-  val part1 = heatLoss(pQueue1, HashSet()) { (d, direction, consecutive) =>
-    consecutive < 3 || d != direction
+  val part1 = heatLoss(pQueue1, HashSet()) {
+    (nextDirection, direction, consecutive) =>
+      consecutive < 3 || nextDirection != direction
   }
   println("Part 1: " + part1)
 
@@ -76,7 +79,8 @@ def readFile: (Int, String) =
     (0, 0, Direction.Right, (0, 0)),
     (0, 0, Direction.Down, (0, 0))
   )(ord)
-  val part2 = heatLoss(pQueue2, HashSet()) { (d, direction, consecutive) =>
-    (consecutive < 4 && d == direction) || consecutive >= 4 && consecutive < 10 || (consecutive >= 10 && d != direction)
+  val part2 = heatLoss(pQueue2, HashSet()) {
+    (nextDirection, direction, consecutive) =>
+      (consecutive < 4 && nextDirection == direction) || consecutive >= 4 && consecutive < 10 || (consecutive >= 10 && nextDirection != direction)
   }
   println("Part 2: " + part2)
