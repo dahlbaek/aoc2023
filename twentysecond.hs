@@ -51,9 +51,9 @@ collides :: Brick -> Brick -> Bool
 collides (Br _ (Pt xmin1 ymin1 _) (Pt xmax1 ymax1 _)) (Br _ (Pt xmin2 ymin2 _) (Pt xmax2 ymax2 _)) =
   ymax1 >= ymin2 && ymax2 >= ymin1 && xmax1 >= xmin2 && xmax2 >= xmin1
 
-blockedBy :: [Brick] -> [(Brick, [Brick])]
+blockedBy :: [Brick] -> [[Brick]]
 blockedBy [] = []
-blockedBy (brick : bricks) = (brick, filter (collides brick) bricks) : blockedBy bricks
+blockedBy (brick : bricks) = filter (collides brick) bricks : blockedBy bricks
 
 blockedByOne :: [Brick] -> Maybe Brick
 blockedByOne [single] = Just single
@@ -61,7 +61,7 @@ blockedByOne (first : second : _) | z (right first) > z (right second) = Just fi
 blockedByOne _ = Nothing
 
 part1 :: [Brick] -> Int
-part1 bricks = length bricks - (length . nub . mapMaybe (blockedByOne . snd) . blockedBy) bricks
+part1 bricks = length bricks - (length . nub . mapMaybe blockedByOne . blockedBy) bricks
 
 part2 :: [Brick] -> Int
 part2 bricks =
