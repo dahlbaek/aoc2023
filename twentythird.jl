@@ -30,9 +30,7 @@ function nextbranch(current::Tuple{Int,Int}, previous::Set{Tuple{Int,Int}}, step
         nexts = possible_directions(current, previous)
         push!(previous, current)
     
-        if size(nexts)[1] == 0
-            current, nexts, nothing
-        elseif size(nexts)[1] == 1
+        if size(nexts)[1] == 1
             nextbranch(nexts[1], previous, steps+1)
         else
             current, nexts, steps + 1
@@ -45,26 +43,29 @@ function longestwalk1(current::Tuple{Int,Int}, previous::Set{Tuple{Int,Int}})
         return 0
     end
 
+    if current in previous
+        return nothing
+    end
+
     previous = deepcopy(previous)
 
     _, bs, s = nextbranch(current, previous, 0)
-    m = -1
+    m = nothing
     for b in bs
         ls = longestwalk1(b, previous)
-        if ls != nothing
-            m = max(m, s + ls)
+        if ls == nothing
+            continue
         end
+        m = max(m == nothing ? 0 : m, s + ls)
     end
-    m == -1 ? nothing : m
+    m
 end
 
 function connected_junctions(current::Tuple{Int,Int}, directions::Vector{Tuple{Int,Int}})
     js::Vector{Tuple{Tuple{Int,Int},Int}} = []
     for direction in directions
         b, _, s = nextbranch(direction, Set([current]), 0)
-        if s != nothing
-            push!(js, (b, b == finish ? s + 1 : s))
-        end
+        push!(js, (b, b == finish ? s + 1 : s))
     end
     js
 end
@@ -92,20 +93,22 @@ function longestwalk2(current::Tuple{Int,Int}, previous::Set{Tuple{Int,Int}})
         return 0
     end
 
+    if current in previous
+        return nothing
+    end
+
     previous = deepcopy(previous)
     push!(previous, current)
 
-    m = -1
+    m = nothing
     for (junction, steps) in js[current]
-        if junction in previous
+        ls = longestwalk2(junction, previous)
+        if ls == nothing
             continue
         end
-        ls = longestwalk2(junction, previous)
-        if ls != nothing
-            m = max(m, steps + ls)
-        end
+        m = max(m == nothing ? 0 : m, steps + ls)
     end
-    m == -1 ? nothing : m
+    m
 end
 
 content = readlines("twentythird.txt")
